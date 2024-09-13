@@ -21,6 +21,7 @@ namespace SaokeApp
         {
             // Add services to the container.
             services.AddControllersWithViews();
+            services.AddMemoryCache();
             var dataSourceBuilder = new NpgsqlDataSourceBuilder(Configuration.GetConnectionString("DefaultConnection"));
             dataSourceBuilder.UseNodaTime();
             var dataSource = dataSourceBuilder.Build();

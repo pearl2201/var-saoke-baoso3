@@ -54,7 +54,7 @@ namespace SaokeApp.Data
                 var importDonateRecords = JsonConvert.DeserializeObject<List<NationalSupportRecord>>(text);
                 foreach (var donateRecord in importDonateRecords)
                 {
-                    var time = donateRecord.CreatedAt.AddHours(-7);
+                    var time = donateRecord.CreatedAt;
                     _context.DonateTracks.Add(new Entities.DonateTrack
                     {
                         Amount = donateRecord.Amount,

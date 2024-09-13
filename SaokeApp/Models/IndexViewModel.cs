@@ -7,6 +7,10 @@ namespace SaokeApp.Models
     {
         public string Search { get; set; }
 
+        public int? Min { get; set; }
+
+        public int? Max { get; set; }
+
         public List<DonateTrackViewModel> DonateTracks { get; set; } = new List<DonateTrackViewModel>();
 
         public int TotalCount { get; set; } = 0;

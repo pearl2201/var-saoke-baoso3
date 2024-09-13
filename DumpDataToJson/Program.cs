@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.Globalization;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using UglyToad.PdfPig;
 using UglyToad.PdfPig.Content;
@@ -63,7 +64,7 @@ public static class Program
                     records.Add(new NationalSupportRecord
                     {
                         Amount = long.Parse(price.Replace(".", "")),
-                        CreatedAt = DateTime.Parse(date),
+                        CreatedAt = DateTime.ParseExact(date,"dd/MM/yyyy", CultureInfo.InvariantCulture),
                         Message = message,
                         TransactionId = transactionId,
                     });

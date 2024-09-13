@@ -1,0 +1,237 @@
+﻿@using Newtonsoft.Json
+@model AnalyticViewModel
+@{
+    ViewData["Title"] = "Analytic Page";
+
+   
+}
+
+<div class="row">
+    <div class="col">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title text-secondary">   Số tiền quyên góp</h5>
+                <p class="card-text text-primary">@(Helpers.RenderMoney(Model.TotalDonateAmount))</p>
+            </div>
+        </div>
+
+    </div>
+    <div class="col">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title text-secondary">    Số người ủng hộ</h5>
+                <p class="card-text text-primary">  @(Model.TotalPersonCount)</p>
+            </div>
+        </div>
+
+
+    </div>
+    <div class="col">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title text-secondary">    Số tiền cao nhất</h5>
+                <p class="card-text text-primary"> @(Helpers.RenderMoney(Model.MaxAmount))</p>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div class="row mt-2">
+    <div class="col">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title text-secondary">   Donate distribution</h5>
+                <div class="row">
+                    <div class="col">
+                        <div id="distributed-chart"></div>
+                    </div>
+                    <div class="col">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Phân loại</th>
+                                    <th scope="col">Số người</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @for (var idx = 0; idx < Model.DistributedAmount.Data.Count; idx++)
+                                {
+
+                                    <tr>
+                                        <td>@Model.DistributedAmount.Data[idx].X</td>
+                                        <td>@Model.DistributedAmount.Data[idx].Value</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+
+</div>
+
+<div class="row mt-2">
+    <div class="col">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title text-secondary">   Donate by date</h5>
+                <div class="row">
+                    <div class="col">
+                        <div id="timeseries-chart"></div>
+                    </div>
+                    <div class="col">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Ngày</th>
+                                    <th scope="col">Số tiền</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @for (var idx = 0; idx < Model.DonateTimeSeries.Labels.Count; idx++)
+                                {
+
+                                    <tr>
+                                        <td>@Model.DonateTimeSeries.Labels[idx].ToString("dd/MM/yyyy")</td>
+                                        <td>
+                                            @Helpers.RenderMoney(Model.DonateTimeSeries.Series[0].Data[idx])
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+
+</div>
+
+@section scripts {
+    <script type="text/javascript">
+        function formatMoney( val )
+        {
+            if ( val < 1000000 )
+            {
+                return ( val / 1000 ).toFixed( 0 ) + " K";
+            } else if ( val < 1000000000 )
+            {
+                return ( val / 1000000 ).toFixed( 0 ) + " triệu";
+            }
+            else
+            {
+                return ( val / 1000000000 ).toFixed( 0 ) + " tỷ";
+            }
+        };
+        var data = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.DonateTimeSeries));
+        console.log( data );
+        var options = {
+            series: [{
+                name: 'Số tiền',
+                data: data.Series[0].Data
+            }],
+            chart: {
+                type: 'line',
+                height: 350,
+            },
+            yaxis:
+            {
+                labels:
+                {
+                    formatter: function ( val )
+                    {
+                        return formatMoney( val );
+
+                    },
+                },
+                title:
+                {
+                    text: 'Số tiền'
+                },
+            },
+            xaxis:
+            {
+                type: 'datetime',
+                categories: data.Labels
+            },
+            tooltip:
+            {
+                shared: false,
+                y:
+                {
+                    formatter: function ( val )
+                    {
+                        return formatMoney( val );
+                    }
+                }
+            }
+        };
+
+        var chart = new ApexCharts( document.querySelector( "#timeseries-chart" ), options );
+        chart.render();
+
+        var data = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.DistributedAmount));
+        console.log( data );
+        var options = {
+            series: [
+                {
+                    data: data.data
+                }
+            ],
+            legend: {
+                show: false
+            },
+            chart: {
+                height: 350,
+                type: 'treemap'
+            },
+            title: {
+                text: 'Distibuted Donate',
+                align: 'center'
+            },
+            dataLabels: {
+                enabled: true,
+                style: {
+                    fontSize: '12px',
+                },
+                formatter: function ( text, op )
+                {
+                    return [text, op.value]
+                },
+                offsetY: -4
+            },
+            colors: [
+                '#3B93A5',
+                '#F7B844',
+                '#ADD8C7',
+                '#EC3C65',
+                '#CDD7B6',
+                '#C1F666',
+                '#D43F97',
+                '#1E5D8C',
+                '#421243',
+                '#7F94B0',
+                '#EF6537',
+                '#C0ADDB'
+            ],
+            plotOptions: {
+                treemap: {
+                    distributed: true,
+                    enableShades: false
+                }
+            }
+        };
+
+        var chart = new ApexCharts( document.querySelector( "#distributed-chart" ), options );
+        chart.render();
+    </script>
+}

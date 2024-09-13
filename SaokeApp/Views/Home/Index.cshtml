@@ -9,62 +9,183 @@
 </div>
 
 <div class="text-center">
-    <div class="form-inline my-2 my-lg-0">
-        <input id="search" class="form-control mr-sm-2" type="search" placeholder="Tìm kiếm theo mã giao dịch, số tiền hoặc chi tiết giao dịch" aria-label="Search" value="@Model.Search">
+
+    <div class="row">
+        <div class="col">
+            <input id="searchText" class="form-control mr-sm-2" type="search" placeholder="Tìm kiếm theo mã giao dịch, số tiền hoặc chi tiết giao dịch" aria-label="Search" value="@Model.Search">
+        </div>
     </div>
-</div>
+    <div class="row mt-2">
+        <div class="col">
+            <input id="min" class="form-control mr-sm-2" type="number" placeholder="Min" aria-label="Min" value="@(Model.Min.HasValue? Model.Min.Value.ToString(): "")">
+        </div>
+        <div class="col ">
+            <input id="max" class="form-control mr-sm-2" type="number" placeholder="Max" aria-label="Max" value="@(Model.Max.HasValue? Model.Max.Value.ToString(): "")">
+        </div>
+    </div>
+    <div class="row mt-2">
+        <div class="col-md-1">
+            <button class="page-link" id="btn-search">
+                Search
+            </button>
 
-@if (!string.IsNullOrEmpty(Model.Search))
-{
-    <table class="table">
-        <thead>
-            <tr>
-                <th scope="col">Date</th>
-                <th scope="col">TransactionId</th>
-                <th scope="col">Amount</th>
-                <th scope="col">Message</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var item in Model.DonateTracks)
-            {
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(Model.Search))
+    {
+        <table class="table">
+            <thead>
                 <tr>
-                    <td>@item.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy")</td>
-                    <td>@item.TransactionId</td>
-                    <td>@item.Amount</td>
-                    <td>@item.Message</td>
+                    <th scope="col">Date</th>
+                    <th scope="col">TransactionId</th>
+                    <th scope="col">Amount</th>
+                    <th scope="col">Message</th>
                 </tr>
-            }
-        </tbody>
-    </table>
-    <nav aria-label="Page navigation example">
-        <ul class="pagination">
-            <li class="page-item @(Model.HasPreviousPage?"":"disabled")"><button class="page-link" id="previous">Previous</button></li>
-            <li class="page-item @(Model.HasNextPage?"":"disabled")"><button class="page-link" id="next">Next</button></li>
-        </ul>
-    </nav>
-}
-@section scripts {
-    <script type="text/javascript">
-$('#search').keypress(function (e) {
-    if (e.which == 13) {
-        let text = $('#search').val();
-        window.location.href = `?search=${text}&page=1&itemsPerPage=20`;
-        return false;    //<---- Add this line
+            </thead>
+            <tbody>
+                @foreach (var item in Model.DonateTracks)
+                {
+                    <tr>
+                        <td>@item.CreatedAt.ToString("dd/MM/yyyy")</td>
+                        <td>@item.TransactionId</td>
+                        <td>@Helpers.RenderMoney(item.Amount)</td>
+                        <td>@item.Message</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        <div class="d-flex flex-row-reverse">
+            <nav aria-label="pagination">
+                <ul class="pagination">
+                    <li class="page-item @(Model.HasPreviousPage?"":"disabled")">
+                        <button class="page-link" id="first">
+                            <span aria-hidden="true">&laquo;</span>
+                            <span class="sr-only">First</span>
+                        </button>
+                    </li>
+                    @if (Model.PageNumber > 2)
+                    {
+                        <li class="page-item">
+                            <button class="page-link">
+                                ...
+                            </button>
+                        </li>
+                    }
+                    @if (Model.PageNumber == (Model.TotalPages) && Model.PageNumber - 2 >= 1)
+                    {
+                        <li class="page-item ">
+                            <button class="page-link" id="backthird">
+                                @(Model.PageNumber - 2)
+                            </button>
+                        </li>
+                    }
+                    @if (Model.PageNumber - 1 > 0)
+                    {
+                        <li class="page-item">
+                            <button class="page-link" id="previous">
+                                @(Model.PageNumber - 1)
+                            </button>
+                        </li>
+                    }
+                    <li class="page-item">
+                        <button class="page-link" id="current">
+                            @(Model.PageNumber)
+                        </button>
+                    </li>
+                    @if (Model.PageNumber <= Model.TotalPages - 1)
+                    {
+                        <li class="page-item ">
+                            <button class="page-link" id="next">
+                                @(Model.PageNumber + 1)
+                            </button>
+                        </li>
+                    }
+                    @if (Model.PageNumber == 1 && Model.TotalPages >= 3)
+                    {
+                        <li class="page-item ">
+                            <button class="page-link" id="third">
+                                3
+                            </button>
+                        </li>
+                    }
+                    @if (Model.PageNumber <= Model.TotalPages - 2)
+                    {
+                        <li class="page-item">
+                            <button class="page-link">
+                                ...
+                            </button>
+                        </li>
+                    }
+                    <li class="page-item @(Model.HasNextPage?"":"disabled")">
+                        <button class="page-link" id="last">
+                            <span aria-hidden="true">&raquo;</span>
+                            <span class="sr-only">Last</span>
+                        </button>
+                    </li>
+                </ul>
+            </nav>
+        </div>
     }
-});
+    @section scripts {
+        <script type="text/javascript">
 
-        $('#previous').on("click", function (e) {
-            e.preventDefault();
-    let t = "@Model.Search";
+            function openPage( search, page )
+            {
+                let min = $( '#min' ).val();
+                let max = $( '#max' ).val();
+                window.location.href = `?search=${search}&page=${page}&min=${min}&max=${max}&itemsPerPage=20`;
+            }
+            $( '#btn-search' ).on( "click", function ( e )
+            {
+                e.preventDefault();
 
-    window.location.href = `?search=${t}&page=@(Model.PageNumber - 1)&itemsPerPage=@(Model.ItemsPerPage)`;
-});
+                let text = $( '#searchText' ).val();
+                openPage( text, 1 );
+                return false;    //<---- Add this line
 
-        $('#next').on("click", function (e) {
-            e.preventDefault();
-    let t = "@Model.Search";
-    window.location.href = `?search=${t}&page=@(Model.PageNumber + 1)&itemsPerPage=@(Model.ItemsPerPage)`;
-});
-    </script>
-}
+            } );
+
+            $( '#previous' ).on( "click", function ( e )
+            {
+                e.preventDefault();
+                let t = "@Model.Search";
+                openPage( t, @(Model.PageNumber - 1) );
+            } );
+
+            $( '#next' ).on( "click", function ( e )
+            {
+                e.preventDefault();
+                let t = "@Model.Search";
+                openPage( t, @(Model.PageNumber + 1) );
+            } );
+
+            $( '#first' ).on( "click", function ( e )
+            {
+                e.preventDefault();
+                let t = "@Model.Search";
+                openPage( t, 1 );
+            } );
+
+            $( '#last' ).on( "click", function ( e )
+            {
+                e.preventDefault();
+                let t = "@Model.Search";
+                openPage( t, @(Model.TotalPages) );
+            } );
+
+            $( '#third' ).on( "click", function ( e )
+            {
+                e.preventDefault();
+                let t = "@Model.Search";
+                openPage( t, 3 );
+            } );
+
+            $( '#backthird' ).on( "click", function ( e )
+            {
+                e.preventDefault();
+                let t = "@Model.Search";
+                openPage( t, @(Model.TotalPages - 2) );
+            } );
+        </script>
+    }
