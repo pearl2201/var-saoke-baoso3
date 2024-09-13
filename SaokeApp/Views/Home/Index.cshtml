@@ -1,0 +1,70 @@
+﻿@model IndexViewModel
+@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="text-center">
+    <p>Dữ liệu cung cấp bởi <a href="https://www.facebook.com/thongtinchinhphu/posts/pfbid03YkRTKZ5WjeHwBavPQbP7EShonj9tTExgY26gNhvQdiEsbjdsLWnzWEoQE1bU9SBl"> MTTQ</a> Learn about.</p>
+    <p>Lưu ý: dữ liệu chỉ trong phạm vi từ 1/9/2024 đến 10/9/2024. Chúng tôi sẽ cập nhật khi có dữ liệu mới từ MTTQ.</p>
+</div>
+
+<div class="text-center">
+    <div class="form-inline my-2 my-lg-0">
+        <input id="search" class="form-control mr-sm-2" type="search" placeholder="Tìm kiếm theo mã giao dịch, số tiền hoặc chi tiết giao dịch" aria-label="Search" value="@Model.Search">
+    </div>
+</div>
+
+@if (!string.IsNullOrEmpty(Model.Search))
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col">Date</th>
+                <th scope="col">TransactionId</th>
+                <th scope="col">Amount</th>
+                <th scope="col">Message</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.DonateTracks)
+            {
+                <tr>
+                    <td>@item.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy")</td>
+                    <td>@item.TransactionId</td>
+                    <td>@item.Amount</td>
+                    <td>@item.Message</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <nav aria-label="Page navigation example">
+        <ul class="pagination">
+            <li class="page-item @(Model.HasPreviousPage?"":"disabled")"><button class="page-link" id="previous">Previous</button></li>
+            <li class="page-item @(Model.HasNextPage?"":"disabled")"><button class="page-link" id="next">Next</button></li>
+        </ul>
+    </nav>
+}
+@section scripts {
+    <script type="text/javascript">
+$('#search').keypress(function (e) {
+    if (e.which == 13) {
+        let text = $('#search').val();
+        window.location.href = `?search=${text}&page=1&itemsPerPage=20`;
+        return false;    //<---- Add this line
+    }
+});
+
+        $('#previous').on("click", function (e) {
+            e.preventDefault();
+    let t = "@Model.Search";
+
+    window.location.href = `?search=${t}&page=@(Model.PageNumber - 1)&itemsPerPage=@(Model.ItemsPerPage)`;
+});
+
+        $('#next').on("click", function (e) {
+            e.preventDefault();
+    let t = "@Model.Search";
+    window.location.href = `?search=${t}&page=@(Model.PageNumber + 1)&itemsPerPage=@(Model.ItemsPerPage)`;
+});
+    </script>
+}
